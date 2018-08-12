@@ -3,38 +3,53 @@ import CoinRow from './CoinRow';
 
 class FilteredList extends Component {
 
+  constructor(props) {
+    super(props);
 
-  render() {
-    const filteredText = this.props.filteredText,
-          rows = [];
+    this.state = { coins: props.coins };
+  }
 
-    let enableSelect;
+  componentWillReceiveProps(nextProps) {
+    const filteredText = nextProps.filteredText,
+          coins = [];
 
-    this.props.coins.forEach(coin => {
+    nextProps.coins.forEach(coin => {
       let coinName = coin.name.toLowerCase(),
           coinSymbol = coin.symbol.toLowerCase();
 
       if (coinName.indexOf(filteredText.toLowerCase()) === -1 && coinSymbol.indexOf(filteredText.toLowerCase()) === -1) {
         return;
       }
-      rows.push(<CoinRow coin={coin} key={coinName} />);
+      coins.push(coin);
     });
 
-    if (rows.length === 1) {
-      enableSelect = true;
-      // this.props.enableSelect();
+    this.setState({ coins });
+
+    if (coins.length === 1) {
+      this.props.enableSelect();
+    } else if (coins.length === 0) {
+      // send notification: "No Results"
+      this.props.disableSelect();
     } else {
-      enableSelect = false;
-      // this.props.disableSelect();
+      this.props.disableSelect();
     }
+  }
+
+  render() {
+      const rows = [],
+            coins = this.state.coins;
+
+      coins.forEach(coin => {
+        let coinName = coin.name;
+        rows.push(<CoinRow coin={coin} key={coinName} />);
+      });
 
     return(
-      <table enableselect={enableSelect}>
+      <table>
         <tbody>{rows}</tbody>
       </table>
     );
   }
 }
-
 
 export default FilteredList;
