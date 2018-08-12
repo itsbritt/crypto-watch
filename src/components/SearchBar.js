@@ -2,48 +2,31 @@ import React, { Component } from 'react';
 import * as RB from 'react-bootstrap';
 
 class SearchBar extends Component {
+
   constructor(props) {
-   super(props);
-   this.state = { filteredText: '' };
+    super(props);
+    this.onUserInput = this.onUserInput.bind(this);
+  }
 
-   this.onUserInput = this.onUserInput.bind(this);
- }
-
-  onUserInput = () => {
-    console.log(this.refs);
-    const filteredText = this.refs.filteredTextInput.value;
-    this.setState({ filteredText });
+  onUserInput(e) {
+    this.props.onTextChange(e.target.value);
   }
 
   render() {
     return(
-
       <RB.FormGroup>
         <RB.InputGroup>
           <RB.FormControl
           type="text"
           placeholder="Search..."
-          value={this.state.filteredText}
-          ref="filteredTextInput"
           onChange={this.onUserInput}/>
           <RB.InputGroup.Button>
-            <RB.Button>Search</RB.Button>
+            <RB.Button disabled={!this.props.enableSelect}>Search</RB.Button>
           </RB.InputGroup.Button>
         </RB.InputGroup>
       </RB.FormGroup>
-    )
+    );
   }
 }
 
 export default SearchBar;
-
-// <form>
-//   <input
-//     type="text"
-//     placeholder="Search..."
-//     value={this.state.filteredText}
-//     ref="filteredTextInput"
-//     onChange={this.onUserInput}
-//   />
-// </form>
-// <button type="button" />

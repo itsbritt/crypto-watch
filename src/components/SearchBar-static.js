@@ -13,6 +13,15 @@ class CoinRow extends Component {
 }
 
 class SearchBar extends Component {
+  constructor(props){
+    super(props);
+    this.handleSearchInput = this.handleSearchInput.bind(this);
+  }
+
+  handleSearchInput(e) {
+    this.props.onUserInput(e.target.value);
+  }
+
   render() {
     return (
       <RB.FormGroup>
@@ -20,9 +29,10 @@ class SearchBar extends Component {
           <RB.FormControl
           type="text"
           placeholder="Search"
+          value={filteredText}
           />
           <RB.InputGroup.Button>
-            <RB.Button>Search</RB.Button>
+            <RB.Button>Select</RB.Button>
           </RB.InputGroup.Button>
         </RB.InputGroup>
       </RB.FormGroup>
@@ -50,10 +60,24 @@ class FilteredList extends Component {
 }
 
 class SearchTable extends Component {
+  constructor(props) {
+   super(props);
+   this.state = { filteredText: '' };
+   this.onUserInput = this.onUserInput.bind(this);
+ }
+
+ onUserInput = () => {
+   const filteredText = this.refs.filteredTextInput.value;
+   this.setState({ filteredText });
+ }
+
   render() {
     return (
       <div>
-        <SearchBar />
+      <SearchBar
+        filteredText={this.state.filteredText}
+        onUserInput={this.onUserInput}
+      />
         <FilteredList /> /* Only show if there are coins in this list */
       </div>
     )
@@ -84,4 +108,4 @@ const COINS = [
   // * Conclusion: Our only state data is the search text
 
   // Next Step: Determining where the state should live
-    // Find the COMMON OWNER COMPONENT 
+    // Find the COMMON OWNER COMPONENT
