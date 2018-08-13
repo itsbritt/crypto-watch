@@ -9,11 +9,11 @@ class FilteredList extends Component {
     this.state = { coins: props.coins };
   }
 
-  componentWillReceiveProps(nextProps) {
-    const filteredText = nextProps.filteredText,
+  componentDidMount() {
+    const filteredText = this.props.filteredText,
           coins = [];
 
-    nextProps.coins.forEach(coin => {
+    this.props.coins.forEach(coin => {
       let coinName = coin.name.toLowerCase(),
           coinSymbol = coin.symbol.toLowerCase();
 
@@ -40,8 +40,7 @@ class FilteredList extends Component {
             coins = this.state.coins;
 
       coins.forEach(coin => {
-        let coinName = coin.name;
-        rows.push(<CoinRow coin={coin} key={coinName} />);
+        rows.push(<CoinRow coin={coin} key={coin.asset_id} />);
       });
 
     return(
