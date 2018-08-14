@@ -4,6 +4,14 @@ body {
   font-family: sans-serif;
 }
 
+#red {
+    background: red;
+}
+
+#blue {
+    background: blue;
+}
+
 .app-body {
     height: auto;
     padding: 20px;

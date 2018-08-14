@@ -23,9 +23,10 @@ class SearchBar extends Component {
             <RB.FormGroup className="search-form">
                 <RB.InputGroup>
                     <RB.FormControl
-                    type="text"
-                    placeholder="Ticker Symbol"
-                    onChange={this.onUserInput}/>
+                        type="text"
+                        placeholder="Ticker Symbol"
+                        onChange={this.onUserInput}
+                    />
                     <RB.InputGroup.Button>
                         <RB.Button onClick={() => this.props.getCoin(this.state.inputText)}>Search</RB.Button>
                     </RB.InputGroup.Button>

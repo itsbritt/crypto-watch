@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import SearchTable from './components/SearchTable';
 import SelectedCoins from './components/SelectedCoins';
+import socketIOClient from 'socket.io-client'
+
 // import axios from 'axios';
 
 // import { library } from '@fortawesome/fontawesome-svg-core';
@@ -16,8 +18,20 @@ class App extends Component {
 
         this.state = {
             selectedCoins: [],
-            openSearchTable: false
+            openSearchTable: false,
+            endpoint: `http://2605:6000:e8c0:8000:2595:b1b:4acd:604e:5000`,
+            color: 'white'
         };
+    }
+
+    send = () => {
+        const socket = socketIOClient(this.state.endpoint);
+
+        socket.emit('change color', this.state.color);
+    }
+
+    setColor = (color) => {
+        this.setState({ color });
     }
 
     getCoin = (coinSymbol) => {
@@ -68,14 +82,20 @@ class App extends Component {
 
     render() {
 
-        console.log('state in app render', this.state);
+        const socket = socketIOClient(this.state.endpoint);
+
+        socket.on('change color', (color) => {
+            document.body.style.backgroundColor = color;
+        });
 
         return (
             <div className="App">
                 <header className="App-header">
 
                 <h1 className="App-title">Crypto Watch</h1>
-
+                <button onClick={() => this.send()}>Change Color</button>
+                <button id="blue" onClick={() => this.setColor('blue')}>Blue</button>
+                <button id="red" onClick={() => this.setColor('red')}>Red</button>
                 </header>
                 <div className="app-body">
                     <div className="col-md-8">
