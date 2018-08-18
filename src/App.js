@@ -17,7 +17,7 @@ class App extends Component {
         super(props);
 
         this.state = {
-            selectedCoins: [],
+            selectedCoins: [], // should this be array of objects with price and time data in each?
             openSearchTable: false,
             endpoint: `http://2605:6000:e8c0:8000:2595:b1b:4acd:604e:5000`,
             color: 'white'
@@ -36,16 +36,13 @@ class App extends Component {
 
     getCoin = (coinSymbol) => {
         const ticker = coinSymbol.trim().toUpperCase();
-
-        let handshake = {
+        const handshake = {
                             "type": "hello",
                             "apikey": "40359CB8-D9FD-463C-8537-008C7D755BAA",
                             "heartbeat": false,
                             "subscribe_data_type": ["trade"],
-                            "subscribe_filter_asset_id": [`${ticker}`],  // not sure if we need this filter
-                            "subscribe_filter_symbol_id": [`COINBASE_SPOT_${ticker}_USD`]
+                            "subscribe_filter_symbol_id": [ `BITSTAMP_SPOT_${ticker}_USD`]
                         };
-
         const ws = new WebSocket('wss://ws.coinapi.io/v1/');
 
         ws.onopen = () => {
@@ -53,10 +50,24 @@ class App extends Component {
         };
 
         ws.onmessage = (evt) => {
-            console.log('response', evt);
+            let data = JSON.parse(evt.data);
+            console.log('response type', evt);
+
+            if (data.type === 'error') {
+                console.log('error !');
+                //handle error
+            } else {
+                this.setState({
+                    // push coin into selectedCoins,
+
+                })
+            }
         };
 
-        this.setState({})
+
+        // this.setState({
+        //
+        // })
     };
 
     openSearch = () => {
