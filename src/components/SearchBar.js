@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import * as RB from 'react-bootstrap';
+// import { FormGroup, InputGroup, Button, FormControl } from 'react-bootstrap';
 
 class SearchBar extends Component {
 
@@ -20,18 +20,14 @@ class SearchBar extends Component {
 
     render() {
         return(
-            <RB.FormGroup className="search-form">
-                <RB.InputGroup>
-                    <RB.FormControl
-                        type="text"
-                        placeholder="Ticker Symbol"
-                        onChange={this.onUserInput}
-                    />
-                    <RB.InputGroup.Button>
-                        <RB.Button onClick={() => this.props.getCoin(this.state.inputText)}>Search</RB.Button>
-                    </RB.InputGroup.Button>
-                </RB.InputGroup>
-            </RB.FormGroup>
+                <div>
+                <input
+                    type="text"
+                    placeholder="Ticker Symbol"
+                    onChange={this.onUserInput}
+                />
+                <button onClick={() => this.props.getCoin(this.state.inputText)}>Search</button>
+                </div>
         );
     }
 }

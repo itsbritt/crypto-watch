@@ -35,58 +35,35 @@ class App extends Component {
     }
 
     getCoin = (coinSymbol) => {
-        const ticker = coinSymbol.trim().toUpperCase(),
-            dummyData = {
-                symbol: ticker
-            };
+        const ticker = coinSymbol.trim().toUpperCase();
 
-        this.setState({
-            selectedCoins: this.state.selectedCoins.concat(dummyData),
-            openSearchTable: false
-        });
+        let handshake = {
+                            "type": "hello",
+                            "apikey": "40359CB8-D9FD-463C-8537-008C7D755BAA",
+                            "heartbeat": false,
+                            "subscribe_data_type": ["trade"],
+                            "subscribe_filter_asset_id": [`${ticker}`],  // not sure if we need this filter
+                            "subscribe_filter_symbol_id": [`COINBASE_SPOT_${ticker}_USD`]
+                        };
 
-        // this.setState({selectedCoins: this.state.selectedCoins.push(ticker)});
+        const ws = new WebSocket('wss://ws.coinapi.io/v1/');
 
+        ws.onopen = () => {
+            ws.send(JSON.stringify(handshake));
+        };
 
-        // set loading animation
-        //generate web socket connection
-        // should already have checked if we can add another coin
-        // axios.get(`https://rest.coinapi.io/v1/exchangerate/${ticker}/USD`, {
-        // headers: {'X-CoinAPI-Key': '40359CB8-D9FD-463C-8537-008C7D755BAA'} // TODO put this in .env file
-        // })
-        // .then(res => {
-        //     // remove loading animation, close search table
-        //     let selectedCoins = this.state.selectedCoins;
-        //     selectedCoins.push()
-        //     this.setState({
-        //         fetchedCoin: res.data,
-        //         selectedCoins: selectedCoins.push(),
-        //         openSearchTable: false;
-        //     });
-        //     console.log('success');
-        // },
-        // (error) => {
-        //     console.log('That is not a valid ticker symbol, you idiot.');
-        //     this.setState({
-        //         error
-        //     });
-        // });
+        ws.onmessage = (evt) => {
+            console.log('response', evt);
+        };
+
+        this.setState({})
     };
 
     openSearch = () => {
         this.setState({openSearchTable: true});
     };
 
-  //use this with updated logo
-  // <img src={logo} className="App-logo" alt="logo" />
-
     render() {
-
-        const socket = socketIOClient(this.state.endpoint);
-
-        socket.on('change color', (color) => {
-            document.body.style.backgroundColor = color;
-        });
 
         return (
             <div className="App">
