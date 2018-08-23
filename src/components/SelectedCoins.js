@@ -7,19 +7,19 @@ class SelectedCoins extends Component {
         let selectedCoins = this.props.coins,
             selectedCoinComponents,
             icon = 'remove',
-            key="key";
+            id = 0;
 
         selectedCoinComponents = selectedCoins.map(coin => {
-            return <SelectedCoin symbol={coin.symbol} key={coin.name} icon={icon} />
+            return <SelectedCoin symbol={ coin } key={ id++ } icon={ icon } />
         });
 
         if (selectedCoins.length < 3) {
-            selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon='add' key={key} openSearch={this.props.openSearch} />);
+            selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon='add' key={ id++ } openSearch={ this.props.openSearch } />);
         }
 
         return (
             <div className="selected-coin-container">
-                {selectedCoinComponents}
+                { selectedCoinComponents }
             </div>
         );
     }

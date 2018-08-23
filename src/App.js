@@ -1,15 +1,18 @@
 import React, { Component } from 'react';
 import SearchTable from './components/SearchTable';
 import SelectedCoins from './components/SelectedCoins';
-import socketIOClient from 'socket.io-client'
+import Axis from './components/Axis';
+import Chart from './components/Chart';
+import axios from 'axios';
+import moment from 'moment';
+import * as d3 from 'd3';
 
-// import axios from 'axios';
+import './App.css';
 
 // import { library } from '@fortawesome/fontawesome-svg-core';
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faStroopwafel } from '@fortawesome/free-solid-svg-icons';
 // import logo from './logo.svg'; // add new logo
-import './App.css';
 
 class App extends Component {
 
@@ -17,57 +20,36 @@ class App extends Component {
         super(props);
 
         this.state = {
-            selectedCoins: [], // should this be array of objects with price and time data in each?
+            selectedCoins: [],
             openSearchTable: false,
-            endpoint: `http://2605:6000:e8c0:8000:2595:b1b:4acd:604e:5000`,
-            color: 'white'
+            d3Data: []
         };
-    }
-
-    send = () => {
-        const socket = socketIOClient(this.state.endpoint);
-
-        socket.emit('change color', this.state.color);
-    }
-
-    setColor = (color) => {
-        this.setState({ color });
     }
 
     getCoin = (coinSymbol) => {
         const ticker = coinSymbol.trim().toUpperCase();
-        const handshake = {
-                            "type": "hello",
-                            "apikey": "40359CB8-D9FD-463C-8537-008C7D755BAA",
-                            "heartbeat": false,
-                            "subscribe_data_type": ["trade"],
-                            "subscribe_filter_symbol_id": [ `BITSTAMP_SPOT_${ticker}_USD`]
-                        };
-        const ws = new WebSocket('wss://ws.coinapi.io/v1/');
+        const timeEnd = moment();
+        const timeStart = timeEnd.subtract(1, 'day').toISOString();
+        const endpoint = `https://rest.coinapi.io/v1/ohlcv/BITSTAMP_SPOT_${ticker}_USD/history?period_id=15MIN&time_start=${timeStart}`;
+        const config = { headers : { "X-CoinAPI-Key": "40359CB8-D9FD-463C-8537-008C7D755BAA" }};
+        const selectedCoins = this.state.selectedCoins;
 
-        ws.onopen = () => {
-            ws.send(JSON.stringify(handshake));
-        };
+        if (selectedCoins.indexOf(ticker) === 1) {
+            console.log('coin aleady added');
+            return;
+        }
 
-        ws.onmessage = (evt) => {
-            let data = JSON.parse(evt.data);
-            console.log('response type', evt);
-
-            if (data.type === 'error') {
-                console.log('error !');
-                //handle error
-            } else {
-                this.setState({
-                    // push coin into selectedCoins,
-
-                })
-            }
-        };
-
-
-        // this.setState({
-        //
-        // })
+        axios.get(endpoint, config)
+        .then(res => {
+            let d3Data = res.data;
+            let selectedCoins = this.state.selectedCoins.concat(ticker);
+            this.setState({ selectedCoins, d3Data });
+        })
+        .catch(err => {
+            console.log('err', err);
+            // notification ticker symbol not found
+        });
+        // clear input field
     };
 
     openSearch = () => {
@@ -75,37 +57,64 @@ class App extends Component {
     };
 
     render() {
+        let margin = 50;
+        let h = 400; //h - margin * 2
+        let w = 860; // w - margin*2
+        let data = this.state.d3Data.map(d => {
+            let parsed = Date.parse(d.time_open);
+            return {
+                date: new Date(parsed),
+                price: d.price_open
+            };
+        });
+
+        let xScale = d3.scaleTime()
+            .domain(d3.extent(data, function (d) {
+                return d.date;
+            }))
+            .range([0, w]);
+
+        let minPrice = d3.min(data, function(d) {
+            return d.price;
+        });
+        let maxPrice = d3.max(data, function(d) {
+            return d.price;
+        });
+
+        let yScale = d3.scaleLinear()
+        .range([h, 0]).domain([minPrice, maxPrice]);
+
+        console.log('minPrice', minPrice);
+        console.log('maxPrice', maxPrice);
+
+        let xAxis = d3.axisBottom(xScale);
+        let yAxis = d3.axisLeft(yScale);
 
         return (
             <div className="App">
                 <header className="App-header">
-
-                <h1 className="App-title">Crypto Watch</h1>
-                <button onClick={() => this.send()}>Change Color</button>
-                <button id="blue" onClick={() => this.setColor('blue')}>Blue</button>
-                <button id="red" onClick={() => this.setColor('red')}>Red</button>
+                    <h1 className="App-title">Crypto Watch</h1>
                 </header>
                 <div className="app-body">
-                    <div className="col-md-8">
-                        <div className="graph-placeholder"></div>
+                    <div className="col-md-9">
+                        <svg className="graph-svg">
+                            <g transform="translate(50, 50)">
+                                <Axis axis={yAxis} axisType="y"/>
+                                <Axis h={h} axis={xAxis} axisType="x"/>
+                                <Chart coins={ this.state.selectedCoins } data={ this.state.d3Data } />
+                            </g>
+                        </svg>
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-3">
                         <div className="search-table-container">
-                            <SelectedCoins coins={this.state.selectedCoins} openSearch={this.openSearch}/>
-                            { this.state.openSearchTable ? <SearchTable getCoin={this.getCoin} /> : null }
+                            <SelectedCoins coins={ this.state.selectedCoins } openSearch={ this.openSearch }/>
+                            { this.state.openSearchTable ? <SearchTable getCoin={ this.getCoin } /> : null }
                         </div>
                     </div>
                 </div>
-
             </div>
         );
     }
 }
 
 export default App;
-
-// Enter Text
-// Show filtered list in dropdown  // probably unnecessary
-// on select / enter  check if that symbol is valid
-// if valid - make request, add symbol to activeList
-// if invalid - notify user of invalid code

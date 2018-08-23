@@ -10,15 +10,15 @@ class SelectedCoin extends Component {
         if (this.props.icon === 'remove') {
             return (
                 <div className="selected-coin">
-                    <FontAwesomeIcon icon={faMinusCircle} className="fa-2x"/>
-                    <h2>{this.props.symbol}</h2>
+                    <FontAwesomeIcon icon={ faMinusCircle } className="fa-2x"/>
+                    <h2>{ this.props.symbol }</h2>
                 </div>
             );
         } else {
             return(
-                <div onClick={this.props.openSearch} className="selected-coin add-coin">
+                <div onClick={ this.props.openSearch } className="selected-coin add-coin">
                     <FontAwesomeIcon icon={faPlusCircle} className="fa-2x" />
-                    <h2>{this.props.symbol}</h2>
+                    <h2>{ this.props.symbol }</h2>
                 </div>
             );
 
