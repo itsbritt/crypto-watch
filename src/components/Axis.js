@@ -20,9 +20,10 @@ class Axis extends Component {
     render() {
         // let translateX = `translate(0, ${this.props.h})`;
         let translateX = `translate(0, 400)`;
+        let translateY = `translate(${this.props.left}, 0)`;
         // let translateY = `translate(0, ${margin})`;
         return (
-            <g className="axis" transform={ this.props.axisType === 'x' ? translateX : '' }></g>
+            <g className="axis" transform={ this.props.axisType === 'x' ? translateX : translateY }></g>
         );
     }
 

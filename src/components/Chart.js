@@ -5,10 +5,10 @@ class Chart extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { price: '', time: ''};
+        this.state = { data: props.data };
     }
 
-    connectWS = (ticker) => {
+    connectWS = (ticker, lastHourData) => {
         let handshake = {
             "type": "hello",
             "apikey": "40359CB8-D9FD-463C-8537-008C7D755BAA",
@@ -24,56 +24,50 @@ class Chart extends Component {
 
         ws.onmessage = (evt) => {
             let data = JSON.parse(evt.data),
-                price = data.price,
-                time = data.time_exchange;
+                price = data.price_open, //check to see what this response data looks like
+                time = data.time_open;
 
             if (data.type === 'error') {
                 console.log('error establishing web socket connection', data);
             } else {
-                this.setState({ price, time });
+                let newStateData = this.state.data.concat({ price, time });
+                this.setState({ data: newStateData });
             }
         };
     }
 
-    // componentWillReceiveProps(nextProps) {
-    //     // console.log('nextProps', nextProps);
-    //     let coins = nextProps.coins,
-    //         ticker = coins[0];
-    //
-    //     coins.forEach(coin => {
-    //
-    //     })
-    //
-    //     if (ticker) {
-    //         this.connectWS(ticker);
-    //     }
-    //
-    // }
+    componentDidMount() {
+        console.log('componentDid mount running');
+        // console.log('nextProps', nextProps);
+        let ticker = this.props.coin,
+            // data = nextProps.data,
+            live = this.props.live;
+
+        //
+        // this.setState({data});
+            // ticker = coins[0];
+
+        if (ticker && live) {
+            this.connectWS(ticker);
+        }
+
+    }
 
     render() {
-        let propsData = this.props.data;
+        let propsData = this.state.data;
         let w = 860,
-            h = 400,
-            data = [];
-
-        propsData.forEach(d => {
-            let parsed = Date.parse(d.time_open),
-                date = new Date(parsed),
-                price = d.price_open;
-
-            data.push({date, price});
-        });
+            h = 400;
 
         let x = d3.scaleTime()
-            .domain(d3.extent(data, function (d) {
+            .domain(d3.extent(propsData, function (d) {
                 return d.date;
             }))
             .rangeRound([0, w]);
 
         let y = d3.scaleLinear()
-            .domain([d3.min(data, function(d) {
+            .domain([d3.min(propsData, function(d) {
                 return d.price;
-            }),d3.max(data,function(d){
+            }),d3.max(propsData,function(d){
                 return d.price;
             })])
             .range([h, 0]);
@@ -87,7 +81,7 @@ class Chart extends Component {
             }).curve(d3.curveLinear);
 
         return (
-            <path className="line shadow" d={line(data)} strokeLinecap="round"/>
+            <path className="line shadow" d={line(propsData)} strokeLinecap="round" stroke={ this.props.stroke } />
         );
 
     }

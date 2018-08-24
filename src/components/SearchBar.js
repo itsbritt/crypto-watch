@@ -21,12 +21,12 @@ class SearchBar extends Component {
     render() {
         return(
                 <div>
-                <input
-                    type="text"
-                    placeholder="Ticker Symbol"
-                    onChange={this.onUserInput}
-                />
-                <button onClick={() => this.props.getCoin(this.state.inputText)}>Search</button>
+                    <input
+                        type="text"
+                        placeholder="Ticker Symbol"
+                        onChange={ this.onUserInput }
+                    />
+                    <button onClick={ () => this.props.getCoin(this.state.inputText) }>Search</button>
                 </div>
         );
     }

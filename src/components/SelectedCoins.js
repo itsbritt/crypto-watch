@@ -13,6 +13,7 @@ class SelectedCoins extends Component {
             return <SelectedCoin symbol={ coin } key={ id++ } icon={ icon } />
         });
 
+        // this limits coins within selectedCOins table to 3 max, and user will only see add new coin  only if 2 or less are already added 
         if (selectedCoins.length < 3) {
             selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon='add' key={ id++ } openSearch={ this.props.openSearch } />);
         }
