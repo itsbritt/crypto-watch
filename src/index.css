@@ -125,10 +125,8 @@ g.tick > line {
 }
 
 .t-select-list {
-    height: 100px;
     width: 500px;
     color: white;
-
 }
 
 .t-select-list > li:first-child {
@@ -143,6 +141,43 @@ g.tick > line {
     margin-right: 4px;
     margin-bottom: 4px;
     /* width: 10px; */
+}
+
+.search-bar-elements {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+.search-btn {
+    background: none !important;
+    border: none !important;
+}
+
+.search-btn:hover svg{
+    color: black;
+}
+
+.custom-search {
+    color: black;
+    background: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    /* border-bottom: 4px solid black !important; */
+    border-radius: 0 !important;
+    -webkit-appearance: none;
+
+}
+
+.custom-search:focus {
+    border-bottom: 1px solid #222B49 !important;
+}
+
+.custom-search > input {
+    outline: none !important;
+    font-size: 20px;
 }
 
 .t-select-list > li {

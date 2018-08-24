@@ -30,7 +30,8 @@ class App extends Component {
     }
 
     changeTimeSelection = (selection) => {
-        this.setState({ timeSelection: selection });
+        this.setState({ timeSelection: selection, d3Data: [], axisData: [] });
+
     };
 
     getTimeConfig = () => {
@@ -77,6 +78,13 @@ class App extends Component {
         }
         return timeConfig;
     };
+
+    // addCoin = (coin) => {
+    //     const ticker = coin.trim().toUpperCase();
+    //     let selectedCoins = this.state.selectedCoins.concat(ticker);
+    //     this.setState({selectedCoins});
+    //     this.getCoinData()
+    // };
 
     getCoin = (coinSymbol) => {
         const ticker = coinSymbol.trim().toUpperCase();
@@ -193,18 +201,6 @@ class App extends Component {
             .range([0, w]);
 
         let xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%H"));
-        // let minPrice = d3.min(axisData, function(d) {
-        //     return d.price;
-        // });
-        // let maxPrice = d3.max(axisData, function(d) {
-        //     return d.price;
-        // });
-        //
-        // let yScale = d3.scaleLinear()
-        // .range([h, 0]).domain([minPrice, maxPrice]);
-
-        // let xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%I %p");
-        // let yAxis = d3.axisLeft(yScale);
 
         return (
             <div className="App">
@@ -215,7 +211,7 @@ class App extends Component {
                     <Tselect timeSelection={ this.state.timeSelection } changeTimeSelection={ this.changeTimeSelection }/>
                     <svg className="graph-svg">
                         <g transform="translate(50, 50)">
-                            { yAxisComponents }
+                            /* { yAxisComponents } */
                             <Axis h={ h } axis={ xAxis } axisType="x"/>
                             { chartComponents }
                         </g>

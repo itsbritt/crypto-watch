@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
-// import { FormGroup, InputGroup, Button, FormControl } from 'react-bootstrap';
+import * as RB from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons'
+// import { FormGroup, FormControl } from 'react-bootstrap';
 
 class SearchBar extends Component {
 
@@ -19,14 +22,18 @@ class SearchBar extends Component {
     }
 
     render() {
-        return(
-                <div>
-                    <input
+        return (
+                <div className="search-bar-elements">
+                      <RB.FormControl
                         type="text"
-                        placeholder="Ticker Symbol"
                         onChange={ this.onUserInput }
-                    />
-                    <button onClick={ () => this.props.getCoin(this.state.inputText) }>Search</button>
+                        placeholder="Symbol (e.g., BTC)"
+                        className="custom-search"
+                        autoFocus
+                      />
+                    <RB.Button className="search-btn" onClick={ () => this.props.getCoin(this.state.inputText) }>
+                        <FontAwesomeIcon icon={faPaperPlane} className="fa-2x" />
+                    </RB.Button>
                 </div>
         );
     }
