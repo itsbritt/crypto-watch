@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import * as RB from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane } from '@fortawesome/free-solid-svg-icons'
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 // import { FormGroup, FormControl } from 'react-bootstrap';
 
 class SearchBar extends Component {
@@ -22,6 +22,7 @@ class SearchBar extends Component {
     }
 
     render() {
+        const isLoading = this.props.isLoading;
         return (
                 <div className="search-bar-elements">
                       <RB.FormControl
@@ -32,7 +33,9 @@ class SearchBar extends Component {
                         autoFocus
                       />
                     <RB.Button className="search-btn" onClick={ () => this.props.getCoin(this.state.inputText) }>
+                        { isLoading ? (<i className="fa fa-spinner fa-pulse fa-2x"></i>)  :
                         <FontAwesomeIcon icon={faPaperPlane} className="fa-2x" />
+                        }
                     </RB.Button>
                 </div>
         );

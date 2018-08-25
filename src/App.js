@@ -211,9 +211,13 @@ class App extends Component {
                     <Tselect timeSelection={ this.state.timeSelection } changeTimeSelection={ this.changeTimeSelection }/>
                     <svg className="graph-svg">
                         <g transform="translate(50, 50)">
+
+                            { d3Data.length ? (<Axis h={ h } axis={ xAxis } axisType="x"/>) : null }
+
+                            { d3Data.length ? {chartComponents} : (<i className="fa fa-spinner fa-pulse fa-2x"></i>) }
+                            
                             /* { yAxisComponents } */
-                            <Axis h={ h } axis={ xAxis } axisType="x"/>
-                            { chartComponents }
+
                         </g>
                     </svg>
                 </div>
