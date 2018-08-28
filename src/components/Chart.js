@@ -34,24 +34,24 @@ class Chart extends Component {
                 this.setState({ data: newStateData });
             }
         };
-    }
+    };
 
-    componentDidMount() {
-        console.log('componentDid mount running');
-        // console.log('nextProps', nextProps);
-        let ticker = this.props.coin,
-            // data = nextProps.data,
-            live = this.props.live;
-
-        //
-        // this.setState({data});
-            // ticker = coins[0];
-
-        if (ticker && live) {
-            this.connectWS(ticker);
-        }
-
-    }
+    // componentDidMount() {
+    //     console.log('componentDid mount running');
+    //     // console.log('nextProps', nextProps);
+    //     let ticker = this.props.coin,
+    //         // data = nextProps.data,
+    //         live = this.props.live;
+    //
+    //     //
+    //     // this.setState({data});
+    //         // ticker = coins[0];
+    //
+    //     if (ticker && live) {
+    //         this.connectWS(ticker);
+    //     }
+    //
+    // }
 
     render() {
         let propsData = this.state.data;

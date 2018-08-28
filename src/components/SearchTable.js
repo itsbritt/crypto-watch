@@ -7,7 +7,7 @@ class SearchTable extends Component {
 
         return (
           <div>
-            <SearchBar getCoin={ this.props.getCoin } isLoaded={ this.props.loaded }/>
+            <SearchBar getCoin={ this.props.getCoin } isLoaded={ this.props.loaded } selectedCoins={ this.props.coins }/>
           </div>
         );
     }

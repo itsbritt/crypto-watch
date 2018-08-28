@@ -16,9 +16,17 @@ class SearchBar extends Component {
     }
 
     onUserInput(e) {
-        this.setState({
-            inputText: e.target.value
-        });
+        let typed = e.target.value,
+            cleaned = typed.trim().toUpperCase();
+
+        if (this.props.selectedCoins.indexOf(cleaned) === -1) {
+            this.setState({
+                inputText: [cleaned]
+            });
+        } else {
+            console.log('coin already added!');
+            //notification here
+        }
     }
 
     render() {

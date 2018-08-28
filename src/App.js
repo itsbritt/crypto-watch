@@ -22,16 +22,28 @@ class App extends Component {
 
         this.state = {
             selectedCoins: [],
+            yAxisData: [],
+            xAxisData: [],
             openSearchTable: false,
-            d3Data: [],
-            axisData: [],
             timeSelection: '24h'
         };
     }
+    // time_open: "2018-08-24T16:39:02.0000000Z",
+    // price_open: 6519.55
+    //
+    // time_open: "2018-08-24T16:45:01.0000000Z"
+    // price_open: 6521.99,
 
     changeTimeSelection = (selection) => {
-        this.setState({ timeSelection: selection, d3Data: [], axisData: [] });
-
+        let currentCoins = this.state.selectedCoins;
+        // close search table to prevent misleading loading animation on coin
+        // also clear search field
+        //  (loading animation will be based on state property, table can be open when time selection changes, and we don't want the user to think
+    // that animation is for an unselected coin  )
+        this.setState({ timeSelection: selection });
+        this.reset();
+        this.getCoin(currentCoins);
+        // this.reset();
     };
 
     getTimeConfig = () => {
@@ -86,39 +98,89 @@ class App extends Component {
     //     this.getCoinData()
     // };
 
-    getCoin = (coinSymbol) => {
-        const ticker = coinSymbol.trim().toUpperCase();
-        const timeConfig = this.getTimeConfig();
-        const timeStart = timeConfig.timeStart;
-        const interval = timeConfig.interval;
-        const endpoint = `https://rest.coinapi.io/v1/ohlcv/BITSTAMP_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
+    getYAxisData = (apiResponse) => {
+        return apiResponse.map(d => {
+            let parsed = Date.parse(d.time_open);
+            return {
+                date: new Date(parsed),
+                price: d.price_open
+            };
+        });
+    };
+
+    getXAxisData = (apiResponse) => {
+        return apiResponse.map(d => {
+            let parsed = Date.parse(d.time_open);
+            return {
+                date: new Date(parsed),
+            };
+        });
+    };
+
+    reset = () => {
+        this.setState({
+            yAxisData: [],
+            xAxisData: [],
+            openSearchTable: false,
+            selectedCoins: []
+        });
+    };
+
+    //separate functions for adding a coin actively and adding already loaded coins (passively) on timeChange since already loaded
+
+    // function addCoin should accept an array as parameter => if array length is one, then setState on dataload, if longer, then
+    //make recursive and call itself unitl all data is loading, then set state
+
+    getCoin = (coinSymbols) => {
+        console.log('coinSymbols', coinSymbols);
         const config = { headers : { "X-CoinAPI-Key": "40359CB8-D9FD-463C-8537-008C7D755BAA" }};
         const selectedCoins = this.state.selectedCoins;
+        let yAxisData = [],
+            xAxisData,
+            coinsToBeAdded = [],
+            newCoins,
+            newYData;
 
-        if (selectedCoins.indexOf(ticker) !== -1) {
-            console.log('coin aleady added!');
-            return;
-        }
+        coinSymbols.forEach((coin, index) => {
+            const ticker = coin;
+            const timeConfig = this.getTimeConfig();
+            const timeStart = timeConfig.timeStart;
+            const interval = timeConfig.interval;
+            const endpoint = `https://rest.coinapi.io/v1/ohlcv/BITSTAMP_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
 
-        axios.get(endpoint, config)
-        .then(res => {
-            let axisData = this.state.axisData.concat(res.data);
-            let data = { [ticker]: res.data };
-            let selectedCoins = this.state.selectedCoins.concat(ticker);
-            let d3Data = this.state.d3Data.concat(data);
-            let openSearchTable = selectedCoins.length > 2 ? false : true;
-            this.setState({ selectedCoins, d3Data, axisData, openSearchTable });
-        })
-        .catch(err => {
-            console.log('err', err);
-            // notification ticker symbol not found
+            axios.get(endpoint, config)
+            .then(res => {
+                console.log('res', res);
+                let yData = this.getYAxisData(res.data);
+                let coinDataObject = { name: ticker, data: yData };
+                yAxisData.push(coinDataObject);
+                if (index < 1) { // only need to get time data once because we're only drawing one xaxis
+                    xAxisData = this.getXAxisData(res.data);
+                    this.setState({ xAxisData });
+                }
+            })
+            .catch(err => {
+                console.log('err', err);
+                return;
+                // notification ticker symbol not found
+            })
+            .then(() => {
+                newCoins = this.state.selectedCoins.concat(ticker);
+                newYData = this.state.yAxisData.concat(yAxisData); // might have to switch setting state back to newYdata
+                console.log('newYData', newYData);
+                this.setState({ selectedCoins: newCoins, yAxisData: yAxisData, openSearchTable: false });
+            });
         });
-        // clear input field
+        // console.log('set state runnning, selectedCoins: ', newYdata);
     };
 
     openSearch = () => {
-        this.setState({openSearchTable: true});
+        this.setState({ openSearchTable: true });
     };
+
+    // closeSearch = () => {
+    //     this.setState({ openSearchTable: false });
+    // };
 
     setColor = (index) => {
         let color;
@@ -151,56 +213,41 @@ class App extends Component {
     };
 
     render() {
-        let h = 400; //h - margin * 2
-        let w = 860; // w - margin * 2
-        let d3Data = this.state.d3Data;
+        let h = 400,//h - margin * 2
+            w = 860,// w - margin * 2
+            chartComponents = [],
+            yAxisComponents = [],
+            yAxisTranslateLeft = 0,
+            tickWidth = w * -1,
+            xScale,
+            xAxis;
+
         let coins = this.state.selectedCoins;
-        let chartComponents = [];
-        let yAxisComponents = [];
-        let yAxisTranslateLeft = 0;
-        let tickWidth = -860;
+        let xAxisData = this.state.xAxisData;
+        let yAxisData = this.state.yAxisData;
 
-        coins.forEach((coin, index) => {
+        yAxisData.forEach((coin,index) => {
+            let strokeColor = this.setColor(index),
+                coinData = coin.data,
+                minPrice = this.getMinPrice(coinData),
+                maxPrice = this.getMaxPrice(coinData),
+                yScale = d3.scaleLinear().range([h, 0]).domain([minPrice, maxPrice]),
+                yAxis = d3.axisLeft(yScale).tickSize(tickWidth);
 
-            let data = d3Data[index][coin];
-            let chartData = data.map(d => {
-                let parsed = Date.parse(d.time_open);
-                return {
-                    date: new Date(parsed),
-                    price: d.price_open
-                };
-            });
+            yAxisComponents.push(<Axis axis={ yAxis } axisType="y" key={ coin.name } left= { yAxisTranslateLeft } />);
+            chartComponents.push(<Chart data={ coinData } coin={ coin.name } key={ coin.name } stroke={ strokeColor }/>);
 
-            let strokeColor = this.setColor(index);
-            chartComponents.push(<Chart data={ chartData } coin={ coin } key={ coin } stroke={ strokeColor }/>);
-
-            let minPrice = this.getMinPrice(chartData);
-            let maxPrice = this.getMaxPrice(chartData);
-            let yScale = d3.scaleLinear().range([h, 0]).domain([minPrice, maxPrice]);
-            let yAxis = d3.axisLeft(yScale).tickSize(tickWidth);
-
-            yAxisComponents.push(<Axis axis={ yAxis } axisType="y" key={ coin } left= { yAxisTranslateLeft } />);
             yAxisTranslateLeft -= 35;
             tickWidth = 0;
-
         });
 
-        // all data to draw upper and lower limits of axes for all paths
-        let axisData = this.state.axisData.map(d => {
-            let parsed = Date.parse(d.time_open);
-            return {
-                date: new Date(parsed),
-                price: d.price_open
-            };
-        });
+        xScale = d3.scaleTime()
+        .domain(d3.extent(xAxisData, (d) => {
+            return d.date;
+        }))
+        .range([0, w]);
 
-        let xScale = d3.scaleTime()
-            .domain(d3.extent(axisData, (d) => {
-                return d.date;
-            }))
-            .range([0, w]);
-
-        let xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%H"));
+        xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%H"));
 
         return (
             <div className="App">
@@ -211,20 +258,16 @@ class App extends Component {
                     <Tselect timeSelection={ this.state.timeSelection } changeTimeSelection={ this.changeTimeSelection }/>
                     <svg className="graph-svg">
                         <g transform="translate(50, 50)">
-
-                            { d3Data.length ? (<Axis h={ h } axis={ xAxis } axisType="x"/>) : null }
-
-                            { d3Data.length ? {chartComponents} : (<i className="fa fa-spinner fa-pulse fa-2x"></i>) }
-                            
-                            /* { yAxisComponents } */
-
+                            { chartComponents }
+                            { yAxisComponents }
+                            <Axis h={ h } axis={ xAxis } axisType="x"/>
                         </g>
                     </svg>
                 </div>
                 <div className="col-md-3">
                     <div className="search-table-container">
                         <SelectedCoins coins={ coins } openSearch={ this.openSearch }/>
-                        { this.state.openSearchTable ? <SearchTable getCoin={ this.getCoin } /> : null }
+                        { this.state.openSearchTable ? <SearchTable coins={ this.state.selectedCoins } getCoin={ this.getCoin } /> : null }
                     </div>
                 </div>
             </div>
