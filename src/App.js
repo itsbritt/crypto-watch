@@ -168,7 +168,7 @@ class App extends Component {
                 newCoins = this.state.selectedCoins.concat(ticker);
                 newYData = this.state.yAxisData.concat(yAxisData); // might have to switch setting state back to newYdata
                 console.log('newYData', newYData);
-                this.setState({ selectedCoins: newCoins, yAxisData: yAxisData, openSearchTable: false });
+                this.setState({ selectedCoins: newCoins, yAxisData: newYData, openSearchTable: false });
             });
         });
         // console.log('set state runnning, selectedCoins: ', newYdata);
