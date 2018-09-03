@@ -35,14 +35,13 @@ class App extends Component {
     // price_open: 6521.99,
 
     changeTimeSelection = (selection) => {
-        let currentCoins = this.state.selectedCoins;
-        // close search table to prevent misleading loading animation on coin
-        // also clear search field
-        //  (loading animation will be based on state property, table can be open when time selection changes, and we don't want the user to think
-    // that animation is for an unselected coin  )
-        this.setState({ timeSelection: selection });
-        this.reset();
-        this.getCoin(currentCoins);
+        let currentCoins = this.state.selectedCoins.slice();
+        let resetPromise = new Promise((resolve, reject) => {
+            resolve(this.reset());
+        });
+        resetPromise.then(() => {
+            this.getCoin(currentCoins);
+        });
         // this.reset();
     };
 
@@ -134,12 +133,13 @@ class App extends Component {
     getCoin = (coinSymbols) => {
         console.log('coinSymbols', coinSymbols);
         const config = { headers : { "X-CoinAPI-Key": "40359CB8-D9FD-463C-8537-008C7D755BAA" }};
-        const selectedCoins = this.state.selectedCoins;
+        let selectedCoins = this.state.selectedCoins.slice();
         let yAxisData = [],
             xAxisData,
-            coinsToBeAdded = [],
             newCoins,
             newYData;
+
+        console.log('selectedCoins at start', selectedCoins);
 
         coinSymbols.forEach((coin, index) => {
             const ticker = coin;
@@ -150,7 +150,6 @@ class App extends Component {
 
             axios.get(endpoint, config)
             .then(res => {
-                console.log('res', res);
                 let yData = this.getYAxisData(res.data);
                 let coinDataObject = { name: ticker, data: yData };
                 yAxisData.push(coinDataObject);
@@ -165,13 +164,29 @@ class App extends Component {
                 // notification ticker symbol not found
             })
             .then(() => {
-                newCoins = this.state.selectedCoins.concat(ticker);
+                // console.log('yaxis data in get coin', this.state.yAxisData);
+                newCoins = selectedCoins.concat(ticker);
+                console.log('newCOins', newCoins);
                 newYData = this.state.yAxisData.concat(yAxisData); // might have to switch setting state back to newYdata
-                console.log('newYData', newYData);
                 this.setState({ selectedCoins: newCoins, yAxisData: newYData, openSearchTable: false });
             });
         });
         // console.log('set state runnning, selectedCoins: ', newYdata);
+    };
+
+    removeCoin = (coin) => {
+        let selectedCoinsCopy = this.state.selectedCoins.slice();
+        let yAxisDataCopy = this.state.yAxisData.slice();
+        let xAxisData = this.state.xAxisData;
+        let coinIndex = selectedCoinsCopy.indexOf(coin);
+
+        selectedCoinsCopy.splice(coinIndex, 1);
+        yAxisDataCopy.splice(coinIndex, 1);
+
+        if (this.state.selectedCoins.length === 1) {
+            xAxisData = [];
+        }
+        this.setState({selectedCoins: selectedCoinsCopy, yAxisData: yAxisDataCopy, xAxisData: xAxisData});
     };
 
     openSearch = () => {
@@ -234,8 +249,8 @@ class App extends Component {
                 yScale = d3.scaleLinear().range([h, 0]).domain([minPrice, maxPrice]),
                 yAxis = d3.axisLeft(yScale).tickSize(tickWidth);
 
-            yAxisComponents.push(<Axis axis={ yAxis } axisType="y" key={ coin.name } left= { yAxisTranslateLeft } />);
-            chartComponents.push(<Chart data={ coinData } coin={ coin.name } key={ coin.name } stroke={ strokeColor }/>);
+            yAxisComponents.push(<Axis axis={ yAxis } axisType="y" key={ index } left= { yAxisTranslateLeft } />);
+            chartComponents.push(<Chart data={ coinData } coin={ coin.name } key={ index + 1 } stroke={ strokeColor }/>);
 
             yAxisTranslateLeft -= 35;
             tickWidth = 0;
@@ -266,7 +281,7 @@ class App extends Component {
                 </div>
                 <div className="col-md-3">
                     <div className="search-table-container">
-                        <SelectedCoins coins={ coins } openSearch={ this.openSearch }/>
+                        <SelectedCoins coins={ coins } openSearch={ this.openSearch } removeCoin={ this.removeCoin } />
                         { this.state.openSearchTable ? <SearchTable coins={ this.state.selectedCoins } getCoin={ this.getCoin } /> : null }
                     </div>
                 </div>
