@@ -40,6 +40,7 @@ class App extends Component {
             resolve(this.reset());
         });
         resetPromise.then(() => {
+            this.setState({timeSelection: selection});
             this.getCoin(currentCoins);
         });
         // this.reset();
@@ -134,12 +135,12 @@ class App extends Component {
         console.log('coinSymbols', coinSymbols);
         const config = { headers : { "X-CoinAPI-Key": "40359CB8-D9FD-463C-8537-008C7D755BAA" }};
         let selectedCoins = this.state.selectedCoins.slice();
-        let yAxisData = [],
+        let yAxisData = this.state.yAxisData.slice(),
             xAxisData,
-            newCoins,
+            newCoins = selectedCoins.concat(coinSymbols),
             newYData;
 
-        console.log('selectedCoins at start', selectedCoins);
+        console.log('selectedCoins at start', selectedCoins); // empty array [btc]
 
         coinSymbols.forEach((coin, index) => {
             const ticker = coin;
@@ -158,17 +159,19 @@ class App extends Component {
                     this.setState({ xAxisData });
                 }
             })
+            .then(() => {
+                // console.log('yaxis data in get coin', this.state.yAxisData);
+                 //
+                // newCoins.push(ticker); //
+                // newYData = yAxisData.concat(yAxisData);
+                if (index === coinSymbols.length - 1)  {  // if this is last coin
+                    this.setState({ selectedCoins: newCoins, yAxisData: yAxisData, openSearchTable: false });
+                }
+            })
             .catch(err => {
                 console.log('err', err);
                 return;
                 // notification ticker symbol not found
-            })
-            .then(() => {
-                // console.log('yaxis data in get coin', this.state.yAxisData);
-                newCoins = selectedCoins.concat(ticker);
-                console.log('newCOins', newCoins);
-                newYData = this.state.yAxisData.concat(yAxisData); // might have to switch setting state back to newYdata
-                this.setState({ selectedCoins: newCoins, yAxisData: newYData, openSearchTable: false });
             });
         });
         // console.log('set state runnning, selectedCoins: ', newYdata);
