@@ -13,15 +13,14 @@ class Axis extends Component {
     }
 
     renderAxis = () => {
-        let node = ReactDOM.findDOMNode(this);
+        const node = ReactDOM.findDOMNode(this);
         d3.select(node).call(this.props.axis);
-    }
+    };
 
     render() {
-        // let translateX = `translate(0, ${this.props.h})`;
-        let translateX = `translate(0, 400)`;
-        let translateY = `translate(${this.props.left}, 0)`;
-        // let translateY = `translate(0, ${margin})`;
+        const translateX = 'translate(0, 400)';
+        const translateY = `translate(${this.props.left}, 0)`;
+
         return (
             <g className="axis" transform={ this.props.axisType === 'x' ? translateX : translateY }></g>
         );

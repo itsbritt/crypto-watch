@@ -4,18 +4,19 @@ import SelectedCoin from './SelectedCoin';
 class SelectedCoins extends Component {
 
     render() {
-        let selectedCoins = this.props.coins,
-            selectedCoinComponents,
-            icon = 'remove',
-            id = 0;
+        const { coins } = this.props;
 
-        selectedCoinComponents = selectedCoins.map(coin => {
-            return <SelectedCoin symbol={ coin } key={ id++ } icon={ icon } removeCoin={ this.props.removeCoin } />
+        let icon = 'remove',
+            selectedCoinComponents;
+
+        selectedCoinComponents = coins.map((coin, index) => {
+            return <SelectedCoin symbol={ coin } key={ index } icon={ icon } removeCoin={ this.props.removeCoin } />
         });
 
-        // this limits coins within selectedCOins table to 3 max, and user will only see add new coin  only if 2 or less are already added
-        if (selectedCoins.length < 3) {
-            selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon='add' key={ id++ } openSearch={ this.props.openSearch } />);
+        //limit coins within selectedCoins table to 3
+        if (coins.length < 3) {
+            icon = 'add';
+            selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon={ icon } key={ coins.length } openSearch={ this.props.openSearch } />);
         }
 
         return (
