@@ -3,6 +3,8 @@ import * as d3 from 'd3';
 
 class Slider extends Component {
 
+
+
     render() {
         const { xAxisData, mouseX, coinData } = this.props;
         const toolTipData = [];
@@ -14,11 +16,11 @@ class Slider extends Component {
             .range([0, 860]);
 
         coinData.forEach((coin, index) => {
-            const domainPosition = xScale.invert(mouseX);
+            const domainPosition = xScale.invert(mouseX); //
             const bisectDate = d3.bisector((xAxisData) => xAxisData.date).right;
-            const datePriceObject = coin.data[bisectDate(coin.data, domainPosition)];
-
-            datePriceObject['name'] = coin.name;
+            const datePriceObject = coin.data[bisectDate(coin.data, domainPosition)] || {};
+            
+            datePriceObject.name = coin.name;
             toolTipData.push(datePriceObject);
         });
 
@@ -41,5 +43,9 @@ class Slider extends Component {
         );
     }
 }
+
+Slider.defaultProps = {
+    coinData: []
+};
 
 export default Slider;

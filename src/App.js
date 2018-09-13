@@ -22,7 +22,7 @@ class App extends Component {
             xAxisData: [],
             openSearchTable: false,
             timeSelection: '24h',
-            mouseX: '',
+            mouseX: 0,
             toolTipData: []
         };
     }
@@ -124,7 +124,7 @@ class App extends Component {
             const timeConfig = this.getTimeConfig();
             const timeStart = timeConfig.timeStart;
             const interval = timeConfig.interval;
-            const endpoint = `https://rest.coinapi.io/v1/ohlcv/BITSTAMP_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
+            const endpoint = `https://rest.coinapi.io/v1/ohlcv/BITFINEX_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
 
             axios.get(endpoint, config)
             .then(res => {
@@ -200,7 +200,7 @@ class App extends Component {
     };
 
     hideToolTip = () => {
-        this.setState({ mouseX: null });
+        this.setState({ mouseX: 0 });
     };
 
     render() {
