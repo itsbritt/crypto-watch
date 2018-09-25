@@ -29,10 +29,13 @@ class App extends Component {
 
     // Purpose is to re-render the already selected coins (if there are any) and draw them with the newly selected time scale/domain
     changeTimeSelection = (selection) => {
-        const currentCoins = this.state.selectedCoins.slice();
+        let currentCoins = this.state.selectedCoins.slice();
         const resetPromise = new Promise((resolve, reject) => {
             resolve(this.reset());
         });
+        if (selection === 'Live') {
+            currentCoins = [currentCoins[0]];
+        }
         resetPromise.then(() => {
             this.setState({timeSelection: selection});
             this.getCoin(currentCoins);
@@ -47,8 +50,8 @@ class App extends Component {
         switch(timeSelection) {
             case 'Live':
                 timeConfig = {
-                    timeStart: timeEnd.subtract(1, 'hour').toISOString(),
-                    interval: '1MIN'
+                    timeStart: timeEnd.subtract(20, 'minute').toISOString(),
+                    interval: '10SEC'
                 };
                 break;
             case '24h':
@@ -94,13 +97,28 @@ class App extends Component {
         });
     };
 
+    getYAxisWsData = (apiResponse) => {
+        const parsedDate = Date.parse(apiResponse.time_exchange);
+        return {
+            date: new Date(parsedDate),
+            price: apiResponse.price
+        };
+    };
+
     getXAxisData = (apiResponse) => {
         return apiResponse.map(d => {
             let parsed = Date.parse(d.time_open);
             return {
-                date: new Date(parsed),
+                date: new Date(parsed)
             };
         });
+    };
+
+    getXAxisWsData = (apiResponse) => {
+        const parsedTime = apiResponse.time_exchange;
+        return {
+            date: new Date(parsedTime)
+        };
     };
 
     reset = () => {
@@ -112,26 +130,88 @@ class App extends Component {
         });
     };
 
+    setupWSData = (apiResponse) => {
+
+    };
+
+    connectWS = (ticker) => {
+        const handshake = {
+            "type": "hello",
+            "apikey": "40359CB8-D9FD-463C-8537-008C7D755BAA",
+            "heartbeat": false,
+            "subscribe_data_type": ["trade"],
+            "subscribe_filter_symbol_id": [ `BITFINEX_SPOT_${ticker}_USD`]
+        };
+        const ws = new WebSocket('wss://ws.coinapi.io/v1/');
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify(handshake));
+            // this.setState({ selectedCoins: [ticker], yAxisData: [{data: [], name: ticker}]  });
+        };
+
+        ws.onmessage = (evt) => {
+
+            console.log('on evt', evt);
+            const parsedResponse = JSON.parse(evt.data);
+
+            // const yAxisData = this.state.yAxisData.slice();
+            const currentYData = this.state.yAxisData[0].data.slice();
+            const newYData = this.getYAxisWsData(parsedResponse);
+            const xAxisData = this.state.xAxisData.slice();
+            const newXData = this.getXAxisWsData(parsedResponse);
+            xAxisData.push(newXData);
+            currentYData.push(newYData);
+
+            this.setState(prevState => ({
+                yAxisData: [{
+                    ...prevState.yAxisData,
+                    data: currentYData
+                }],
+                xAxisData
+            }));
+        };
+    };
+
     getCoin = (coinSymbols) => {
         const config = { headers : { "X-CoinAPI-Key": "40359CB8-D9FD-463C-8537-008C7D755BAA" }};
         const selectedCoins = this.state.selectedCoins.slice();
         const yAxisData = this.state.yAxisData.slice();
         const newCoins = selectedCoins.concat(coinSymbols);
+        const timeConfig = this.getTimeConfig();
+        const { timeSelection } = this.state;
         let xAxisData;
 
         coinSymbols.forEach((coin, index) => {
             const ticker = coin;
-            const timeConfig = this.getTimeConfig();
             const timeStart = timeConfig.timeStart;
             const interval = timeConfig.interval;
-            const endpoint = `https://rest.coinapi.io/v1/ohlcv/BITFINEX_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
+            let endpoint = `https://rest.coinapi.io/v1/ohlcv/BITFINEX_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
+            //
+            // let apiCall;
+            //
+            // if (timeSelection === 'Live') {
+            //     axios.get(endpoint, config)
+            //     .then(res => {
+            //         // this.setupWSData(response.data);
+            //         let xAxis = this.getXAxisData(res.data);
+            //         let yAxis = this.getYAxisData(res.data);
+            //         let coinData = { name: ticker, data: yAxis };
+            //         this.setState({ xAxisData,  });
+            //     })
+            //     .then(() => {
+            //         return this.connectWS(coin);
+            //     });
+            // } else {
+            //     apiCall = ;
+            // }
 
             axios.get(endpoint, config)
             .then(res => {
+                // res.data must be an array in order to be
                 const yData = this.getYAxisData(res.data);
                 const coinDataObject = { name: ticker, data: yData };
                 yAxisData.push(coinDataObject);
-                if (index < 1) { // only need to get time data once because we're only drawing one x-axis
+                if (index < 1) { // only need to get time data once unless connecting to web socket
                     xAxisData = this.getXAxisData(res.data);
                     this.setState({ xAxisData });
                 }
@@ -139,6 +219,10 @@ class App extends Component {
             .then(() => {
                 if (index === coinSymbols.length - 1)  {  // set state if this is last coin
                     this.setState({ selectedCoins: newCoins, yAxisData: yAxisData, openSearchTable: false });
+                }
+
+                if (timeSelection === 'Live') {
+                    return this.connectWS(coin);
                 }
             })
             .catch(err => {
@@ -203,6 +287,19 @@ class App extends Component {
         this.setState({ mouseX: 0 });
     };
 
+    getTimeFormat = () => {
+        const { timeSelection } = this.state;
+        if (timeSelection === '1m') {
+            return "%d %b";
+        } else if (timeSelection === '1y' || timeSelection === 'All') {
+            return "%d-%b-%y";
+        } else if (timeSelection === 'Live') {
+            return '%H:%M:%S %p';
+        } else {
+            return '%H:%M %p';
+        }
+    };
+
     render() {
         const h = 400;
         const w = 860;
@@ -213,8 +310,9 @@ class App extends Component {
         .domain(d3.extent(xAxisData, (d) => {
             return d.date;
         }))
-        .range([0, w]);
-        const xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%H"));
+        .rangeRound([0, w]);
+        const timeFormat = this.getTimeFormat();
+        const xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat(timeFormat));
 
         let yAxisTranslateLeft = 0;
         let tickWidth = w * -1;
@@ -224,7 +322,7 @@ class App extends Component {
             const coinData = coin.data;
             const minPrice = this.getMinPrice(coinData);
             const maxPrice = this.getMaxPrice(coinData);
-            const yScale = d3.scaleLinear().range([h, 0]).domain([minPrice, maxPrice]);
+            const yScale = d3.scaleLinear().rangeRound([h, 0]).domain([minPrice, maxPrice]);
             const yAxis = d3.axisLeft(yScale).tickSize(tickWidth);
 
             yAxisComponents.push(<Axis axis={ yAxis } axisType="y" key={ index } left= { yAxisTranslateLeft } color= { strokeColor } />);

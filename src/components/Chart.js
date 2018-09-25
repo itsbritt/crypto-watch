@@ -11,7 +11,7 @@ class Chart extends Component {
     //         "apikey": "40359CB8-D9FD-463C-8537-008C7D755BAA",
     //         "heartbeat": false,
     //         "subscribe_data_type": ["trade"],
-    //         "subscribe_filter_symbol_id": [ `BITSTAMP_SPOT_${ticker}_USD`]
+    //         "subscribe_filter_symbol_id": [ `BITFINEX_SPOT_${ticker}_USD`]
     //     };
     //
     //     let ws = new WebSocket('wss://ws.coinapi.io/v1/');
