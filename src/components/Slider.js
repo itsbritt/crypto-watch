@@ -3,8 +3,6 @@ import * as d3 from 'd3';
 
 class Slider extends Component {
 
-
-
     render() {
         const { xAxisData, mouseX, coinData } = this.props;
         const toolTipData = [];
@@ -38,7 +36,7 @@ class Slider extends Component {
                 { textElements }
                 { circleElements }
                 {/* +3 gives some extra padding between pointer and this rect element to avoid triggering mouseLeave on App.js */}
-                <rect width={ 3 } height={ toolTipHeight } x={ mouseX + 3 } />
+                <rect width={ 1 } height={ toolTipHeight } x={ mouseX + 3 } fill="white" />
             </g>
         );
     }

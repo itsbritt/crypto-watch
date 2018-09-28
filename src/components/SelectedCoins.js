@@ -4,7 +4,7 @@ import SelectedCoin from './SelectedCoin';
 class SelectedCoins extends Component {
 
     render() {
-        const { coins } = this.props;
+        const { coins, timeSelection } = this.props;
 
         let icon = 'remove',
             selectedCoinComponents;
@@ -14,7 +14,7 @@ class SelectedCoins extends Component {
         });
 
         //limit coins within selectedCoins table to 3
-        if (coins.length < 3) {
+        if (coins.length < 3 && timeSelection !== 'Live') {
             icon = 'add';
             selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon={ icon } key={ coins.length } openSearch={ this.props.openSearch } />);
         }

@@ -8,7 +8,7 @@ import Slider from './components/Slider';
 import axios from 'axios';
 import moment from 'moment';
 import * as d3 from 'd3';
-
+import { ToastContainer, toast } from 'react-toastify';
 import './App.css';
 
 class App extends Component {
@@ -26,6 +26,8 @@ class App extends Component {
             toolTipData: []
         };
     }
+
+    notify = () => toast("Wow so easy !");
 
     // Purpose is to re-render the already selected coins (if there are any) and draw them with the newly selected time scale/domain
     changeTimeSelection = (selection) => {
@@ -151,13 +153,16 @@ class App extends Component {
 
         ws.onmessage = (evt) => {
 
-            console.log('on evt', evt);
-            const parsedResponse = JSON.parse(evt.data);
+            if (!this.state.selectedCoins.length) {
+                this.setState({timeSelection: '24h'});
+                ws.close();
+                return;
+            }
 
-            // const yAxisData = this.state.yAxisData.slice();
+            const parsedResponse = JSON.parse(evt.data);
             const currentYData = this.state.yAxisData[0].data.slice();
             const newYData = this.getYAxisWsData(parsedResponse);
-            const xAxisData = this.state.xAxisData.slice();
+            const xAxisData = this.state.xAxisData.slice().splice(1);
             const newXData = this.getXAxisWsData(parsedResponse);
             xAxisData.push(newXData);
             currentYData.push(newYData);
@@ -186,25 +191,6 @@ class App extends Component {
             const timeStart = timeConfig.timeStart;
             const interval = timeConfig.interval;
             let endpoint = `https://rest.coinapi.io/v1/ohlcv/BITFINEX_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
-            //
-            // let apiCall;
-            //
-            // if (timeSelection === 'Live') {
-            //     axios.get(endpoint, config)
-            //     .then(res => {
-            //         // this.setupWSData(response.data);
-            //         let xAxis = this.getXAxisData(res.data);
-            //         let yAxis = this.getYAxisData(res.data);
-            //         let coinData = { name: ticker, data: yAxis };
-            //         this.setState({ xAxisData,  });
-            //     })
-            //     .then(() => {
-            //         return this.connectWS(coin);
-            //     });
-            // } else {
-            //     apiCall = ;
-            // }
-
             axios.get(endpoint, config)
             .then(res => {
                 // res.data must be an array in order to be
@@ -226,6 +212,7 @@ class App extends Component {
                 }
             })
             .catch(err => {
+                this.notify();
                 console.log('err', err);
                 return;
             });
@@ -294,7 +281,7 @@ class App extends Component {
         } else if (timeSelection === '1y' || timeSelection === 'All') {
             return "%d-%b-%y";
         } else if (timeSelection === 'Live') {
-            return '%H:%M:%S %p';
+            return "%M:%S";
         } else {
             return '%H:%M %p';
         }
@@ -312,7 +299,7 @@ class App extends Component {
         }))
         .rangeRound([0, w]);
         const timeFormat = this.getTimeFormat();
-        const xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat(timeFormat));
+        const xAxis = d3.axisBottom(xScale).ticks(12).tickFormat(d3.timeFormat(timeFormat));
 
         let yAxisTranslateLeft = 0;
         let tickWidth = w * -1;
@@ -344,17 +331,28 @@ class App extends Component {
                             { chartComponents }
                             { yAxisComponents }
                             <Axis h={ h } axis={ xAxis } axisType="x"/>
-                            <rect height={ h } width={ w } opacity={0} onMouseLeave={ this.hideToolTip } onMouseMove={ (evt) => this.showToolTip(evt) }/>
-                            { this.state.mouseX && this.state.selectedCoins.length && <Slider setColor={ this.setColor } mouseX={ this.state.mouseX } xAxisData={ this.state.xAxisData} coinData={this.state.yAxisData}/> }
+                            <rect className="draggable-area" height={ h } width={ w } opacity={0} onMouseLeave={ this.hideToolTip } onMouseMove={ (evt) => this.showToolTip(evt) }/>
+                            { this.state.mouseX && this.state.selectedCoins.length && <Slider classname="slider" setColor={ this.setColor } mouseX={ this.state.mouseX } xAxisData={ this.state.xAxisData} coinData={this.state.yAxisData}/> }
                         </g>
                     </svg>
                 </div>
                 <div className="col-md-3">
                     <div className="search-table-container">
-                        <SelectedCoins coins={ this.state.selectedCoins } openSearch={ this.openSearch } removeCoin={ this.removeCoin } />
+                        <SelectedCoins coins={ this.state.selectedCoins } openSearch={ this.openSearch } removeCoin={ this.removeCoin } timeSelection={ this.state.timeSelection } />
                         { this.state.openSearchTable && <SearchTable coins={ this.state.selectedCoins } getCoin={ this.getCoin } /> }
                     </div>
                 </div>
+                <ToastContainer
+                    position="bottom-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={true}
+                    pauseOnVisibilityChange
+                    draggable
+                    pauseOnHover
+                />
             </div>
         );
     }
