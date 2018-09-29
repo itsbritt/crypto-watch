@@ -17,6 +17,7 @@
     "react-bootstrap": "^0.32.3",
     "react-d3-basic": "^1.6.11",
     "react-dom": "^16.5.2",
+    "react-notifications": "^1.4.3",
     "react-scripts": "1.1.4",
     "react-toastify": "^4.3.2",
     "socket.io": "^2.1.1",

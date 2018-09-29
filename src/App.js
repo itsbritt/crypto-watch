@@ -8,8 +8,11 @@ import Slider from './components/Slider';
 import axios from 'axios';
 import moment from 'moment';
 import * as d3 from 'd3';
-import { ToastContainer, toast } from 'react-toastify';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChartArea, faCoins } from '@fortawesome/free-solid-svg-icons'
 import './App.css';
+import 'react-notifications/lib/notifications.css';
 
 class App extends Component {
 
@@ -21,13 +24,24 @@ class App extends Component {
             yAxisData: [],
             xAxisData: [],
             openSearchTable: false,
+            loading: false,
             timeSelection: '24h',
             mouseX: 0,
             toolTipData: []
         };
     }
 
-    notify = () => toast("Wow so easy !");
+    notify = (errorCode) => {
+        let message;
+        if (errorCode === 429) {
+            message = 'API Request Limit Exceeded';
+        } else if (errorCode === 400) {
+            message = 'Invalid Ticker Symbol';
+        } else {
+            message = 'Oops, Something Went Wrong';
+        }
+        NotificationManager.error(message);
+    }
 
     // Purpose is to re-render the already selected coins (if there are any) and draw them with the newly selected time scale/domain
     changeTimeSelection = (selection) => {
@@ -36,11 +50,17 @@ class App extends Component {
             resolve(this.reset());
         });
         if (selection === 'Live') {
-            currentCoins = [currentCoins[0]];
+            if (currentCoins[0]) {
+                currentCoins = [currentCoins[0]];
+            } else {
+                this.setState({selectedCoins: []});
+            }
         }
         resetPromise.then(() => {
             this.setState({timeSelection: selection});
-            this.getCoin(currentCoins);
+            if (currentCoins[0]) {
+                this.getCoin(currentCoins);
+            }
         });
     };
 
@@ -132,10 +152,6 @@ class App extends Component {
         });
     };
 
-    setupWSData = (apiResponse) => {
-
-    };
-
     connectWS = (ticker) => {
         const handshake = {
             "type": "hello",
@@ -148,7 +164,6 @@ class App extends Component {
 
         ws.onopen = () => {
             ws.send(JSON.stringify(handshake));
-            // this.setState({ selectedCoins: [ticker], yAxisData: [{data: [], name: ticker}]  });
         };
 
         ws.onmessage = (evt) => {
@@ -160,7 +175,7 @@ class App extends Component {
             }
 
             const parsedResponse = JSON.parse(evt.data);
-            const currentYData = this.state.yAxisData[0].data.slice();
+            const currentYData = this.state.yAxisData[0].data.slice(1);
             const newYData = this.getYAxisWsData(parsedResponse);
             const xAxisData = this.state.xAxisData.slice().splice(1);
             const newXData = this.getXAxisWsData(parsedResponse);
@@ -186,6 +201,10 @@ class App extends Component {
         const { timeSelection } = this.state;
         let xAxisData;
 
+        if (coinSymbols.length) {
+            this.setState({loading: true});
+        }
+
         coinSymbols.forEach((coin, index) => {
             const ticker = coin;
             const timeStart = timeConfig.timeStart;
@@ -204,7 +223,7 @@ class App extends Component {
             })
             .then(() => {
                 if (index === coinSymbols.length - 1)  {  // set state if this is last coin
-                    this.setState({ selectedCoins: newCoins, yAxisData: yAxisData, openSearchTable: false });
+                    this.setState({ selectedCoins: newCoins, yAxisData: yAxisData, openSearchTable: false, loading: false });
                 }
 
                 if (timeSelection === 'Live') {
@@ -212,8 +231,9 @@ class App extends Component {
                 }
             })
             .catch(err => {
-                this.notify();
-                console.log('err', err);
+                this.notify(err.response.status);
+                this.setState({loading: false, openSearchTable: false});
+                console.error('err', err.response.status);
                 return;
             });
         });
@@ -237,6 +257,12 @@ class App extends Component {
 
     openSearch = () => {
         this.setState({ openSearchTable: true });
+    };
+
+    toggleSearch = () => {
+        this.setState(prevState => ({
+            openSearchTable: !prevState.openSearchTable
+        }));
     };
 
     setColor = (index) => {
@@ -313,7 +339,7 @@ class App extends Component {
             const yAxis = d3.axisLeft(yScale).tickSize(tickWidth);
 
             yAxisComponents.push(<Axis axis={ yAxis } axisType="y" key={ index } left= { yAxisTranslateLeft } color= { strokeColor } />);
-            chartComponents.push(<Chart data={ coinData } ref={ coin.name } mouseX={ this.state.mouseX } coin={ coin.name } key={ index + 1 } stroke={ strokeColor }/>);
+            chartComponents.push(<Chart data={ coinData } ref={ coin.name } mouseX={ this.state.mouseX } coin={ coin.name } key={ index + 1 } stroke={ strokeColor } timeSelection={ this.state.timeSelection }/>);
 
             yAxisTranslateLeft -= 35; // Put some space between y-axes
             tickWidth = 0;
@@ -322,10 +348,13 @@ class App extends Component {
         return (
             <div className="App">
                 <header className="App-header">
+                    <FontAwesomeIcon icon={ faChartArea } className="fa fa-3x" />
                     <h1 className="App-title">Coin Watch</h1>
+                    <FontAwesomeIcon icon={ faCoins} className="fa fa-3x" />
                 </header>
                 <div className="col-md-9">
                     <Tselect timeSelection={ this.state.timeSelection } changeTimeSelection={ this.changeTimeSelection }/>
+                    { this.state.loading && <div className="lds-ripple"><div></div><div></div></div> }
                     <svg className="graph-svg">
                         <g transform="translate(50, 50)">
                             { chartComponents }
@@ -335,24 +364,15 @@ class App extends Component {
                             { this.state.mouseX && this.state.selectedCoins.length && <Slider classname="slider" setColor={ this.setColor } mouseX={ this.state.mouseX } xAxisData={ this.state.xAxisData} coinData={this.state.yAxisData}/> }
                         </g>
                     </svg>
+                    { this.state.yAxisData.length && <h5 className="chart-legend">Price Chart - US Dollar (USD)</h5> }
                 </div>
                 <div className="col-md-3">
                     <div className="search-table-container">
-                        <SelectedCoins coins={ this.state.selectedCoins } openSearch={ this.openSearch } removeCoin={ this.removeCoin } timeSelection={ this.state.timeSelection } />
+                        <SelectedCoins coins={ this.state.selectedCoins } toggleSearch={ this.toggleSearch } removeCoin={ this.removeCoin } timeSelection={ this.state.timeSelection } openSearchTable={ this.state.openSearchTable } />
                         { this.state.openSearchTable && <SearchTable coins={ this.state.selectedCoins } getCoin={ this.getCoin } /> }
                     </div>
                 </div>
-                <ToastContainer
-                    position="bottom-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={true}
-                    pauseOnVisibilityChange
-                    draggable
-                    pauseOnHover
-                />
+                <NotificationContainer timeOut='2000' />
             </div>
         );
     }

@@ -10,13 +10,15 @@ class SelectedCoins extends Component {
             selectedCoinComponents;
 
         selectedCoinComponents = coins.map((coin, index) => {
-            return <SelectedCoin symbol={ coin } key={ index } icon={ icon } removeCoin={ this.props.removeCoin } />
+            return <SelectedCoin symbol={ coin } key={ index } icon={ icon } removeCoin={ this.props.removeCoin } openSearchTable={ this.props.openSearchTable }  />
         });
 
         //limit coins within selectedCoins table to 3
         if (coins.length < 3 && timeSelection !== 'Live') {
             icon = 'add';
-            selectedCoinComponents.push(<SelectedCoin symbol="Add New" icon={ icon } key={ coins.length } openSearch={ this.props.openSearch } />);
+            selectedCoinComponents.push(<SelectedCoin symbol="Add Coin" icon={ icon } key={ coins.length } toggleSearch={ this.props.toggleSearch } openSearchTable={ this.props.openSearchTable } />);
+        } else if (!coins.length && timeSelection === 'Live') {
+            selectedCoinComponents.push(<SelectedCoin symbol="Add Coin" icon={ 'add' } key={ coins.length } toggleSearch={ this.props.toggleSearch } openSearchTable={ this.props.openSearchTable } />);
         }
 
         return (

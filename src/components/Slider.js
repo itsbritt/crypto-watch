@@ -27,8 +27,8 @@ class Slider extends Component {
             const y = (index * 18) + toolTipHeight;
             const fillColor = this.props.setColor(index);
 
-            textElements.push(<text stroke={ fillColor } key={ index } x={ x } y={ y }>{ coin.name }: { coin.price } </text>);
-            circleElements.push(<circle key={ index } cx={ mouseX + 4 } r={ 4 } cy={ toolTipHeight } />);
+            textElements.push(<text stroke={ fillColor } key={ index } x={ x } y={ y }>{ coin.name }: { `${coin.price} USD` } </text>);
+            circleElements.push(<circle key={ index } cx={ mouseX + 4 } r={ 4 } fill="white" cy={ toolTipHeight } />);
         });
 
         return (
