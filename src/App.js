@@ -157,7 +157,7 @@ class App extends Component {
   connectWS = ticker => {
     const handshake = {
       type: "hello",
-      apikey: "40359CB8-D9FD-463C-8537-008C7D755BAA",
+      apikey: process.env.REACT_APP_COIN_API_KEY,
       heartbeat: false,
       subscribe_data_type: ["trade"],
       subscribe_filter_symbol_id: [`BITFINEX_SPOT_${ticker}_USD`]
@@ -214,7 +214,8 @@ class App extends Component {
       const ticker = coin;
       const timeStart = timeConfig.timeStart;
       const interval = timeConfig.interval;
-      let endpoint = `https://rest.coinapi.io/v1/ohlcv/BITFINEX_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
+      // let endpoint = `https://rest.coinapi.io/v1/ohlcv/BITFINEX_SPOT_${ticker}_USD/history?period_id=${interval}&time_start=${timeStart}`;
+      let endpoint = `https://rest.coinapi.io/v1/ohlcv/${ticker}/USD/history?period_id=${interval}&time_start=${timeStart}`;
       axios
         .get(endpoint, config)
         .then(res => {
