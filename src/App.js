@@ -16,6 +16,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartArea, faCoins } from "@fortawesome/free-solid-svg-icons";
 import "./App.css";
 import "react-notifications/lib/notifications.css";
+import runtimeEnv from "@mars/heroku-js-runtime-env";
+
+const env = runtimeEnv();
 
 class App extends Component {
   constructor(props) {
