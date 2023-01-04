@@ -19,7 +19,7 @@
     "react-d3-basic": "^1.6.11",
     "react-dom": "^16.5.2",
     "react-notifications": "^1.4.3",
-    "react-scripts": "1.1.4",
+    "react-scripts": "5.0.1",
     "react-toastify": "^4.3.2",
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1"
